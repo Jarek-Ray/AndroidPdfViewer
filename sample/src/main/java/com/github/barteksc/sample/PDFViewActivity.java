@@ -40,6 +40,7 @@ import com.github.barteksc.pdfviewer.listener.OnPageErrorListener;
 import com.github.barteksc.pdfviewer.listener.OnRenderListener;
 import com.github.barteksc.pdfviewer.listener.OnScanTouchListener;
 import com.github.barteksc.pdfviewer.scroll.DefaultScrollHandle;
+import com.github.barteksc.pdfviewer.util.Constants;
 import com.github.barteksc.pdfviewer.util.FitPolicy;
 import com.shockwave.pdfium.PdfDocument;
 import com.shockwave.pdfium.util.SizeF;
@@ -116,6 +117,8 @@ public class PDFViewActivity extends AppCompatActivity implements OnPageChangeLi
 
     @AfterViews
     void afterViews() {
+        //解决加载模糊问题 1f，不显示缩略图
+        Constants.THUMBNAIL_RATIO = 1f;
         Log.i("-------", "------afterViews" + "--");
         pdfView.setBackgroundColor(Color.LTGRAY);
         pdfView.setMidZoom(2f);
@@ -179,6 +182,7 @@ public class PDFViewActivity extends AppCompatActivity implements OnPageChangeLi
             String fileName = SAMPLE_FILE;
             fileName = "sample1.pdf";
             fileName = "sample_2.pdf";
+            fileName = "sample_3.pdf";
             displayFromAsset(fileName);
         }
 
@@ -258,6 +262,8 @@ public class PDFViewActivity extends AppCompatActivity implements OnPageChangeLi
             }
         };
         pdfConfig = PdfViewConfigUtils.doInitPdfViewConfig(pdfConfig, configListener);
+        //设置播放页
+        pdfConfig.pages(16, 17);
         pdfConfig.load();
         if (true) {
             return;
