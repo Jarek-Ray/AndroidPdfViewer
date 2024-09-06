@@ -22,6 +22,7 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 
+import com.github.barteksc.pdfviewer.listener.OnScanTouchListener;
 import com.github.barteksc.pdfviewer.model.LinkTapEvent;
 import com.github.barteksc.pdfviewer.scroll.ScrollHandle;
 import com.github.barteksc.pdfviewer.util.SnapEdge;
@@ -43,6 +44,8 @@ class DragPinchManager implements GestureDetector.OnGestureListener, GestureDete
     private GestureDetector gestureDetector;
     private ScaleGestureDetector scaleGestureDetector;
 
+    private OnScanTouchListener scanTouchListener;
+
     private boolean scrolling = false;
     private boolean scaling = false;
     private boolean enabled = false;
@@ -55,6 +58,20 @@ class DragPinchManager implements GestureDetector.OnGestureListener, GestureDete
         pdfView.setOnTouchListener(this);
     }
 
+    DragPinchManager(PDFView pdfView, AnimationManager animationManager, boolean scaleFlag) {
+        this.pdfView = pdfView;
+        this.animationManager = animationManager;
+        gestureDetector = new GestureDetector(pdfView.getContext(), this);
+        if (scaleFlag) {
+            scaleGestureDetector = new ScaleGestureDetector(pdfView.getContext(), this);
+        }
+        pdfView.setOnTouchListener(this);
+    }
+
+    public void setScanTouchListener(OnScanTouchListener scanTouchListener) {
+        this.scanTouchListener = scanTouchListener;
+    }
+
     void enable() {
         enabled = true;
     }
@@ -63,8 +80,16 @@ class DragPinchManager implements GestureDetector.OnGestureListener, GestureDete
         enabled = false;
     }
 
-    void disableLongpress(){
+    void disableLongpress() {
         gestureDetector.setIsLongpressEnabled(false);
+    }
+
+    void enableScale() {
+        scaleGestureDetector = new ScaleGestureDetector(pdfView.getContext(), this);
+    }
+
+    void disableScale() {
+        scaleGestureDetector = null;
     }
 
     @Override
@@ -139,7 +164,7 @@ class DragPinchManager implements GestureDetector.OnGestureListener, GestureDete
 
     @Override
     public boolean onDoubleTap(MotionEvent e) {
-        if (!pdfView.isDoubletapEnabled()) {
+        if (!pdfView.isDoubleTapEnabled()) {
             return false;
         }
 
@@ -289,7 +314,10 @@ class DragPinchManager implements GestureDetector.OnGestureListener, GestureDete
         if (!enabled) {
             return false;
         }
-
+        // add by bob 禁用缩放
+        if (scaleGestureDetector == null) {
+            return false;
+        }
         boolean retVal = scaleGestureDetector.onTouchEvent(event);
         retVal = gestureDetector.onTouchEvent(event) || retVal;
 
@@ -298,6 +326,9 @@ class DragPinchManager implements GestureDetector.OnGestureListener, GestureDete
                 scrolling = false;
                 onScrollEnd(event);
             }
+        }
+        if (scanTouchListener != null) {
+            scanTouchListener.onScanTouch(v, event, pdfView.getZoom());
         }
         return retVal;
     }
